@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Canvas App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgb(12, 12, 12);
+            font-family: "Lexend Deca", sans-serif;
+            color: white;
+            min-height: 100vh;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        header {
+            margin: 5px 0 10px 0;
+            text-align: center;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin: 0 0 5px 0;
+            background: linear-gradient(135deg, #ffffff, #a5a5a5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: #a5a5a5;
+            margin: 0;
+            font-size: 12px;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: min(1000px, 100%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .toolbar {
+            width: 100%;
+            background-color: rgb(30, 30, 30);
+            border: 1px solid rgb(50, 50, 50);
+            padding: 10px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #2e2e2e, #242424);
+            border: 1px solid rgb(60, 60, 60);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover, .btn.active {
+            background: linear-gradient(135deg, rgb(75, 189, 255), #0077b6);
+            border-color: rgb(75, 189, 255);
+            box-shadow: 0 0 10px rgba(75, 189, 255, 0.4);
+        }
+
+        .clear-btn:hover {
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            border-color: #ff4757;
+            box-shadow: 0 0 10px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn:disabled {
+            background: #1a1a1a;
+            border-color: rgb(40, 40, 40);
+            color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .zoom-btn {
+            font-size: 15px;
+            padding: 8px 14px;
+        }
+
+        .color-palette {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 260px;
+        }
+
+        .color-swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.1s ease;
+        }
+
+        .color-swatch:hover, .color-swatch.active {
+            transform: scale(1.15);
+            border-color: white;
+        }
+
+        .custom-color-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            width: 24px;
+            height: 24px;
+        }
+
+        .custom-color-picker {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .custom-color-preview {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid rgb(60, 60, 60);
+            background: linear-gradient(45deg, red, orange, yellow, green, blue, purple);
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .custom-color-container.active .custom-color-preview {
+            border-color: white;
+            transform: scale(1.15);
+        }
+
+        .size-slider {
+            cursor: pointer;
+            accent-color: rgb(75, 189, 255);
+            width: 80px;
+        }
+
+        .canvas-window {
+            width: 100%;
+            height: 60vh;
+            border: 2px solid rgb(45, 45, 45);
+            border-radius: 16px;
+            overflow: hidden;
+            background: #ffffff;
+            position: relative;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            background: #ffffff;
+            cursor: crosshair;
+            position: absolute;
+            top: 0;
+            left: 0;
+            touch-action: none;
+            transform-origin: 0 0;
+        }
+
+        .back-link {
+            margin: 5px 0;
+            color: #a5a5a5;
+            text-decoration: none;
+            transition: color 0.2s;
+            font-weight: bold;
+            z-index: 10;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+        
+        .pan-hint {
+            font-size: 11px;
+            color: #777;
+            margin-top: -5px;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            header h1 { font-size: 20px; }
+            .toolbar { gap: 8px; padding: 8px; }
+            .btn { padding: 6px 10px; font-size: 12px; }
+            .zoom-btn { padding: 6px 12px; font-size: 14px; }
+            .color-swatch { width: 18px; height: 18px; }
+            .custom-color-preview { width: 18px; height: 18px; }
+            .size-slider { width: 55px; }
+            .canvas-window { height: 55vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Global Shared Canvas</h1>
+        <p>Draw anything! Anyone online right now will see it live.</p>
+    </header>
+    <div class="pan-hint">💻 Pan: Right-Click / Spacebar+Drag | 📱 Pan: Drag with 2 Fingers</div>
+
+    <div class="canvas-container">
+        <div class="toolbar">
+            <div class="tool-group">
+                <button id="btnBrush" class="btn active">✏️ Brush</button>
+                <button id="btnEraser" class="btn">🧽 Eraser</button>
+                <button id="btnClear" class="btn clear-btn">🗑️ Clear</button>
+            </div>
+
+            <div class="tool-group">
+                <button id="btnZoomOut" class="btn zoom-btn">➖</button>
+                <button id="btnZoomIn" class="btn zoom-btn">➕</button>
+                <button id="btnHomeView" class="btn">🏠 Center</button>
+            </div>
+
+            <div class="tool-group">
+                <div class="color-palette">
+                    <div class="color-swatch active" style="background: #ff4757;" data-color="#ff4757"></div>
+                    <div class="color-swatch" style="background: #ffa500;" data-color="#ffa500"></div>
+                    <div class="color-swatch" style="background: #ffec3d;" data-color="#ffec3d"></div>
+                    <div class="color-swatch" style="background: #2ed573;" data-color="#2ed573"></div>
+                    <div class="color-swatch" style="background: #1e90ff;" data-color="#1e90ff"></div>
+                    <div class="color-swatch" style="background: #9b59b6;" data-color="#9b59b6"></div>
+                    <div class="color-swatch" style="background: #ff78cb;" data-color="#ff78cb"></div>
+                    <div class="color-swatch" style="background: #a1887f;" data-color="#a1887f"></div>
+                    <div class="color-swatch" style="background: #000000;" data-color="#000000"></div>
+                    
+                    <div class="custom-color-container" id="customColorContainer">
+                        <div class="custom-color-preview" id="customColorPreview"></div>
+                        <input type="color" id="hexPicker" class="custom-color-picker" value="#ff4757">
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <input type="range" id="sizeSlider" class="size-slider" min="2" max="40" value="5">
+            </div>
+        </div>
+
+        <div class="canvas-window" id="canvasWindow">
+            <canvas id="globalCanvas" width="3200" height="2400"></canvas>
+        </div>
+    </div>
+    
+    <a href="index.html" class="back-link">← Go Back to Home</a>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXDQHSTbdvFVTH-GkMMCCeKGinS7H33-A",
+            authDomain: "the-gago-list-canvas.firebaseapp.com",
+            databaseURL: "https://the-gago-list-canvas-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "the-gago-list-canvas",
+            storageBucket: "the-gago-list-canvas.firebasestorage.app",
+            messagingSenderId: "671895922183",
+            appId: "1:671895922183:web:aa377e32bb14133e23eca2"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const linesRef = database.ref('canvas_lines');
+
+        const canvasWindow = document.getElementById('canvasWindow');
+        const canvas = document.getElementById('globalCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const btnBrush = document.getElementById('btnBrush');
+        const btnEraser = document.getElementById('btnEraser');
+        const btnClear = document.getElementById('btnClear');
+        const btnZoomIn = document.getElementById('btnZoomIn');
+        const btnZoomOut = document.getElementById('btnZoomOut');
+        const btnHomeView = document.getElementById('btnHomeView');
+        const sizeSlider = document.getElementById('sizeSlider');
+        const swatches = document.querySelectorAll('.color-swatch');
+        
+        const hexPicker = document.getElementById('hexPicker');
+        const customColorPreview = document.getElementById('customColorPreview');
+        const customColorContainer = document.getElementById('customColorContainer');
+
+        // State Tracking
+        let isDrawing = false;
+        let isPanning = false;
+        let isSpacePressed = false;
+        
+        // Transform Matrix Tracking
+        let panX = 0;
+        let panY = 0;
+        let currentScale = 0.25; 
+        
+        let startPanX = 0;
+        let startPanY = 0;
+
+        let lastX = 0;
+        let lastY = 0;
+        
+        let currentMode = 'brush'; 
+        let selectedColor = '#ff4757';
+        let currentSize = 5;
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        function updateTransform() {
+            canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+        }
+        
+        function centerCanvas() {
+            const winRect = canvasWindow.getBoundingClientRect();
+            currentScale = winRect.width < 500 ? 0.15 : 0.25; 
+            panX = (winRect.width - canvas.width * currentScale) / 2;
+            panY = (winRect.height - canvas.height * currentScale) / 2;
+            updateTransform();
+        }
+        
+        window.addEventListener('load', centerCanvas);
+        window.addEventListener('resize', centerCanvas);
+        btnHomeView.addEventListener('click', centerCanvas);
+
+        btnZoomIn.addEventListener('click', () => adjustZoom(0.05));
+        btnZoomOut.addEventListener('click', () => adjustZoom(-0.05));
+
+        function adjustZoom(factor) {
+            const oldScale = currentScale;
+            currentScale = Math.max(0.05, Math.min(2.0, currentScale + factor));
+            
+            const winRect = canvasWindow.getBoundingClientRect();
+            const centerX = winRect.width / 2;
+            const centerY = winRect.height / 2;
+            
+            panX = centerX - (centerX - panX) * (currentScale / oldScale);
+            panY = centerY - (centerY - panY) * (currentScale / oldScale);
+            
+            updateTransform();
+        }
+
+        window.addEventListener('keydown', (e) => { if(e.code === 'Space') isSpacePressed = true; });
+        window.addEventListener('keyup', (e) => { if(e.code === 'Space') isSpacePressed = false; });
+
+        function getCanvasCoordinates(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function drawLineLocal(x1, y1, x2, y2, color, size) {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = size;
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.closePath();
+        }
+        
+        function handleStart(e) {
+            const isTouchEvent = e.type === 'touchstart';
+            const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
+            const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
+
+            if ((!isTouchEvent && (e.button === 2 || isSpacePressed)) || (isTouchEvent && e.touches.length === 2)) {
+                isPanning = true;
+                isDrawing = false;
+                
+                if (isTouchEvent && e.touches.length === 2) {
+                    startPanX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - panX;
+                    startPanY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - panY;
+                } else {
+                    startPanX = clientX - panX;
+                    startPanY = clientY - panY;
+                }
+                return;
+            }
+
+            if (!isTouchEvent && e.button !== 0) return; 
+
+            isDrawing = true;
+            const coords = getCanvasCoordinates(clientX, clientY);
+            lastX = coords.x;
+            lastY = coords.y;
+        }
+
+        function handleMove(e) {
+            const isTouchEvent = e.type === 'touchmove';
+            
+            if (isPanning) {
+                e.preventDefault();
+                if (isTouchEvent && e.touches.length === 2) {
+                    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    panX = midX - startPanX;
+                    panY = midY - startPanY;
+                } else if (!isTouchEvent) {
+                    panX = e.clientX - startPanX;
+                    panY = e.clientY - startPanY;
+                }
+                updateTransform();
+                return;
+            }
+
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
+            const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
+            
+            const coords = getCanvasCoordinates(clientX, clientY);
+            const currentX = coords.x;
+            const currentY = coords.y;
+
+            const drawColor = (currentMode === 'eraser') ? '#FFFFFF' : selectedColor;
+
+            drawLineLocal(lastX, lastY, currentX, currentY, drawColor, currentSize);
+
+            linesRef.push({
+                x1: lastX,
+                y1: lastY,
+                x2: currentX,
+                y2: currentY,
+                color: drawColor,
+                size: currentSize
+            });
+
+            lastX = currentX;
+            lastY = currentY;
+        }
+
+        function handleEnd() {
+            isDrawing = false;
+            isPanning = false;
+        }
+
+        canvasWindow.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+        canvasWindow.addEventListener('contextmenu', e => e.preventDefault());
+
+        canvasWindow.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
+
+        btnBrush.addEventListener('click', () => {
+            currentMode = 'brush';
+            btnBrush.classList.add('active');
+            btnEraser.classList.remove('active');
+        });
+
+        btnEraser.addEventListener('click', () => {
+            currentMode = 'eraser';
+            btnEraser.classList.add('active');
+            btnBrush.classList.remove('active');
+        });
+
+        // --- CLEAR CANVAS LOGIC WITH FIXED EVEN STREAM ---
+        btnClear.addEventListener('click', () => {
+            linesRef.remove();
+
+            let cooldownTime = 3;
+            btnClear.disabled = true;
+            btnClear.innerText = `⏳ ${cooldownTime}s`;
+
+            const countdownInterval = setInterval(() => {
+                cooldownTime--;
+                if (cooldownTime <= 0) {
+                    clearInterval(countdownInterval);
+                    btnClear.disabled = false;
+                    btnClear.innerText = "🗑️ Clear";
+                } else {
+                    btnClear.innerText = `⏳ ${cooldownTime}s`;
+                }
+            }, 1000);
+        });
+
+        sizeSlider.addEventListener('input', (e) => {
+            currentSize = parseInt(e.target.value);
+        });
+
+        swatches.forEach(swatch => {
+            swatch.addEventListener('click', (e) => {
+                swatches.forEach(s => s.classList.remove('active'));
+                customColorContainer.classList.remove('active');
+                e.target.classList.add('active');
+                selectedColor = e.target.getAttribute('data-color');
+                currentMode = 'brush';
+                btnBrush.classList.add('active');
+                btnEraser.classList.remove('active');
+            });
+        });
+
+        hexPicker.addEventListener('input', (e) => {
+            swatches.forEach(s => s.classList.remove('active'));
+            customColorContainer.classList.add('active');
+            selectedColor = e.target.value;
+            customColorPreview.style.background = selectedColor;
+            currentMode = 'brush';
+            btnBrush.classList.add('active');
+            btnEraser.classList.remove('active');
+        });
+
+        // --- REAL-TIME EVENT STREAM CONTROLLERS ---
+        linesRef.on('child_added', (snapshot) => {
+            const data = snapshot.val();
+            drawLineLocal(data.x1, data.y1, data.x2, data.y2, data.color, data.size);
+        });
+
+        // Fixed clear detection: Only fires clean canvas operations when elements are completely missing
+        linesRef.on('child_removed', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+    </script>
+</body>
+</html>

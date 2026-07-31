@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: rgb(12, 12, 12);
+            margin: 0;
+            padding: 40px 20px;
+            font-family: "Lexend Deca", sans-serif;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .menu-container {
+            width: min(500px, 100%);
+            background-color: rgb(30, 30, 30);
+            border: 2px solid rgb(45, 45, 45);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .title {
+            font-size: 42px;
+            margin: 0 0 30px 0;
+            background: linear-gradient(135deg, #ffffff, #a5a5a5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        } 
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .link-btn {
+            color: #ffffff;
+            text-decoration: none;
+            background: linear-gradient(135deg, #2e2e2e, #242424);
+            border: 1px solid rgb(50, 50, 50);
+            padding: 16px 20px;
+            border-radius: 14px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .link-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgb(75, 189, 255), #0077b6);
+            border-color: rgb(75, 189, 255);
+            box-shadow: 0 5px 15px rgba(75, 189, 255, 0.3);
+        }
+
+        /* Custom color accent just for the Canvas button to make it stand out */
+        .canvas-btn:hover {
+            background: linear-gradient(135deg, #a8ff78, #78ffd6);
+            border-color: #a8ff78;
+            color: rgb(12, 12, 12);
+            box-shadow: 0 5px 15px rgba(120, 255, 214, 0.4);
+        }
+    </style>
+</head>
+<body>  
+
+    <div class="menu-container">
+        <h1 class="title">Welcome to the ZepZar website</h1>
+        <nav class="nav-links">
+            <a href="gagolist.html" class="link-btn">The Gago List</a>
+            <a href="preview.html" class="link-btn">Minigame (Catch The Kiwi)</a>
+            <a href="canvas.html" class="link-btn canvas-btn">Global Collaborative Canvas</a>
+        </nav>
+    </div>
+
+</body>
+</html>
