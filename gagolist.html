@@ -110,7 +110,7 @@
         /* === Header Elements === */
         .header-section {
             width: min(900px, 100%);
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -154,6 +154,40 @@
             text-transform: uppercase;
         }
 
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 12px;
+            width: min(900px, 100%);
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(16px);
+            transition: var(--transition-smooth);
+        }
+
+        .tab-btn.active {
+            background: rgba(75, 189, 255, 0.15);
+            border-color: var(--accent-blue);
+            color: #ffffff;
+            box-shadow: 0 4px 20px rgba(75, 189, 255, 0.2);
+        }
+
+        .tab-btn:hover:not(.active) {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
         /* Stats Grid */
         .stats {
             display: flex;
@@ -189,13 +223,17 @@
             color: #ffffff;
         }
 
-        /* === Levels Layout === */
-        .list-container {
+        /* === Views Layout === */
+        .view-section {
             width: min(900px, 100%);
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 24px;
             box-sizing: border-box;
+        }
+
+        .view-section.active {
+            display: flex;
         }
 
         .level-card {
@@ -212,6 +250,7 @@
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
             transition: var(--transition-smooth);
             overflow: hidden;
+            position: relative;
         }
 
         .level-card:hover {
@@ -231,6 +270,7 @@
             flex-shrink: 0;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
         }
 
         .level-image {
@@ -242,6 +282,21 @@
 
         .level-card:hover .level-image {
             transform: scale(1.08);
+        }
+
+        /* Difficulty Badge */
+        .diff-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(10, 14, 26, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            backdrop-filter: blur(8px);
         }
 
         /* Content info inside Card */
@@ -283,8 +338,9 @@
         /* Buttons & Actions */
         .action-links {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             margin-top: 8px;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -292,9 +348,9 @@
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            padding: 10px 22px;
+            padding: 10px 18px;
             border-radius: 12px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             transition: var(--transition-smooth);
             cursor: pointer;
@@ -323,6 +379,92 @@
             background: rgba(75, 189, 255, 0.12);
             border-color: var(--accent-blue);
             transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        /* History Global Log Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        .history-table th, .history-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        .history-table th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
+        /* History Modal Drawer */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #101522;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            width: min(550px, 100%);
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--accent-blue);
+        }
+
+        .close-modal {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
         }
 
         /* Empty & Loading State design */
@@ -366,7 +508,7 @@
             box-shadow: 0 12px 35px rgba(75, 189, 255, 0.5);
         }
 
-        /* LDM Optimized Mode overrides */
+        /* LDM Mode Overrides */
         .ldm * {
             animation: none !important;
             transition: none !important;
@@ -449,9 +591,34 @@
             <p class="names">Enzo • Darren A • Jevan</p>
         </div>
 
-        <main class="list-container" id="levels-container">
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchView('levels-view')">Main List</button>
+            <button class="tab-btn" onclick="switchView('history-view')">Placement History</button>
+        </div>
+
+        <!-- MAIN LIST VIEW -->
+        <main class="view-section active" id="levels-view">
             <div class="loading-text">Loading levels from database...</div>
         </main>
+
+        <!-- HISTORY PLACEMENT TAB VIEW -->
+        <main class="view-section" id="history-view">
+            <div class="loading-text">Loading history logs...</div>
+        </main>
+    </div>
+
+    <!-- LEVEL SPECIFIC HISTORY MODAL DRAWER -->
+    <div class="modal-overlay" id="history-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-level-title">Placement History</h3>
+                <button class="close-modal" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modal-history-content">
+                <p style="color: var(--text-muted);">Loading logs...</p>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -470,8 +637,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        let levelsData = [];
+
         async function fetchLevels() {
-            const container = document.getElementById("levels-container");
+            const container = document.getElementById("levels-view");
             
             try {
                 const q = query(collection(db, "levels"), orderBy("rank", "asc"));
@@ -484,14 +653,17 @@
 
                 container.innerHTML = ""; 
                 document.getElementById("level-count").textContent = querySnapshot.size;
+                levelsData = [];
 
-                querySnapshot.forEach((doc) => {
-                    const level = doc.data();
+                querySnapshot.forEach((docSnap) => {
+                    const level = docSnap.data();
+                    levelsData.push({ id: docSnap.id, ...level });
                     
                     const card = document.createElement("div");
                     card.className = "level-card";
                     card.innerHTML = `
                         <div class="level-image-wrapper">
+                            <span class="diff-tag">${level.difficulty || 'Demon'}</span>
                             <img src="${level.thumbnailUrl}" alt="${level.name}" class="level-image">
                         </div>
                         <div class="desc">
@@ -501,20 +673,107 @@
                             <div class="action-links">
                                 <a href="${level.videoUrl}" target="_blank" class="btn btn-primary">Watch ${level.videoType}</a>
                                 <a href="victors.html?id=${level.levelId}" class="btn btn-secondary transition-link">View Victors</a>
+                                <button class="btn btn-ghost" onclick="showLevelHistory('${level.levelId}', '${level.name}')">History Log</button>
                             </div>
                         </div>
                     `;
                     container.appendChild(card);
                 });
 
-                // Re-bind click events dynamically for newly generated AJAX links
                 bindTransitionLinks();
+                fetchHistoryLogs();
 
             } catch (error) {
                 console.error("Error retrieving levels: ", error);
-                container.innerHTML = '<div class="loading-text" style="color: #ff4757; border-color: rgba(255, 71, 87, 0.3);">Failed to load database content. Ensure Firestore security rules allow read access.</div>';
+                container.innerHTML = '<div class="loading-text" style="color: #ff4757; border-color: rgba(255, 71, 87, 0.3);">Failed to load database content.</div>';
             }
         }
+
+        async function fetchHistoryLogs() {
+            const historyContainer = document.getElementById("history-view");
+            try {
+                // Read global history logs if logged in Firestore
+                const q = query(collection(db, "rank_history"), orderBy("changedAt", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    historyContainer.innerHTML = `
+                        <div class="loading-text">
+                            No placement history entries recorded yet.<br>
+                            <span style="font-size:12px; color: var(--text-muted);">Reorder levels in the Admin panel to automatically generate logs.</span>
+                        </div>`;
+                    return;
+                }
+
+                let html = `
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Level</th>
+                                <th>Old Rank</th>
+                                <th>New Rank</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                querySnapshot.forEach(docSnap => {
+                    const log = docSnap.data();
+                    const dateStr = log.changedAt ? new Date(log.changedAt.toDate()).toLocaleDateString() : "N/A";
+                    html += `
+                        <tr>
+                            <td>${dateStr}</td>
+                            <td><b>${log.levelName || log.levelId}</b></td>
+                            <td style="color:#ff6b81;">#${log.previousRank || '-'}</td>
+                            <td style="color:#2ed573;">#${log.newRank || '-'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                historyContainer.innerHTML = html;
+
+            } catch (e) {
+                console.log("No explicit history collection found or read error:", e);
+                historyContainer.innerHTML = `
+                    <div class="loading-text">
+                        No placement history logs found.
+                    </div>`;
+            }
+        }
+
+        // Show level-specific placement history inside Modal
+        window.showLevelHistory = function(levelId, levelName) {
+            document.getElementById("modal-level-title").textContent = `${levelName} - History`;
+            const modalContent = document.getElementById("modal-history-content");
+            const targetLevel = levelsData.find(l => l.levelId === levelId);
+
+            if (targetLevel && targetLevel.placementHistory && targetLevel.placementHistory.length > 0) {
+                let listHtml = '<ul style="padding-left:20px; color:#ffffff;">';
+                targetLevel.placementHistory.forEach(h => {
+                    listHtml += `<li style="margin-bottom:8px;">Moved to <b>#${h.rank}</b> (${h.difficulty || 'Demon'})</li>`;
+                });
+                listHtml += '</ul>';
+                modalContent.innerHTML = listHtml;
+            } else {
+                modalContent.innerHTML = `<p style="color: var(--text-muted);">Current Rank: <b>#${targetLevel ? targetLevel.rank : '-'}</b><br>No previous placement shifts recorded.</p>`;
+            }
+
+            document.getElementById("history-modal").classList.add("active");
+        };
+
+        window.closeModal = function() {
+            document.getElementById("history-modal").classList.remove("active");
+        };
+
+        window.switchView = function(viewId) {
+            document.querySelectorAll(".view-section").forEach(v => v.classList.remove("active"));
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            
+            document.getElementById(viewId).classList.add("active");
+            event.target.classList.add("active");
+        };
 
         fetchLevels();
     </script>
@@ -541,13 +800,12 @@
     document.body.appendChild(btn);
 })();
 
-// Intercept clicks to perform custom out-transition fade animations
+// Intercept clicks for page transition
 function bindTransitionLinks() {
     const wrapper = document.querySelector(".page-wrapper");
     const links = document.querySelectorAll("a");
 
     links.forEach(link => {
-        // Only intercept local links and avoid blank targets or external redirects
         if (
             link.hostname === window.location.hostname && 
             !link.target && 

@@ -22,7 +22,7 @@
         }
 
         .admin-container {
-            width: min(600px, 100%);
+            width: min(650px, 100%);
             background: rgba(24, 24, 24, 0.75);
             border: 1px solid rgb(38, 38, 38);
             backdrop-filter: blur(16px);
@@ -145,6 +145,79 @@
         .form-section.active {
             display: block;
         }
+
+        /* Manage list styling */
+        .manage-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .manage-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .manage-item .level-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+
+        .manage-item .level-title {
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .manage-item select {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-danger {
+            background: rgba(255, 71, 87, 0.2);
+            border-color: #ff4757;
+            color: #ff4757;
+        }
+
+        .btn-danger:hover {
+            background: #ff4757;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -156,6 +229,7 @@
         
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('level-form')">Add Level</button>
+            <button class="tab-btn" onclick="switchTab('manage-form')">Manage / Reorder</button>
             <button class="tab-btn" onclick="switchTab('victor-form')">Add Victor</button>
         </div>
 
@@ -178,6 +252,16 @@
                 <input type="text" id="levelId" required placeholder="143608276">
             </div>
             <div class="form-group">
+                <label>Difficulty Estimation</label>
+                <select id="levelDifficulty">
+                    <option value="Easy Demon">Easy Demon</option>
+                    <option value="Medium Demon">Medium Demon</option>
+                    <option value="Hard Demon">Hard Demon</option>
+                    <option value="Insane Demon">Insane Demon</option>
+                    <option value="Extreme Demon">Extreme Demon</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Thumbnail Image URL/Path (e.g. laststop.jpeg)</label>
                 <input type="text" id="levelThumb" required placeholder="laststop.jpeg">
             </div>
@@ -194,6 +278,14 @@
             </div>
             <button type="submit" class="btn-submit">Publish to Firebase</button>
         </form>
+
+        <div id="manage-form" class="form-section">
+            <h2>Manage & Reorder Levels</h2>
+            <div id="manage-level-list" class="manage-list">
+                <p style="color: #a5a5a5;">Loading levels...</p>
+            </div>
+            <button type="button" id="save-order-btn" class="btn-submit" style="margin-top: 15px;">Save Hierarchy & Difficulty Changes</button>
+        </div>
 
         <form id="victor-form" class="form-section">
             <h2>Add Player Victor</h2>
@@ -219,9 +311,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, writeBatch, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        // Your exact credentials
         const firebaseConfig = {
             apiKey: "AIzaSyABhdmEpVDR4jT1SSx85Y9Kglx9iiLPyaw",
             authDomain: "gago-list.firebaseapp.com",
@@ -234,6 +325,8 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        let loadedLevels = [];
+
         // --- ADD LEVEL ---
         document.getElementById('level-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -242,6 +335,7 @@
                 name: document.getElementById('levelName').value,
                 creator: document.getElementById('levelCreator').value,
                 levelId: document.getElementById('levelId').value,
+                difficulty: document.getElementById('levelDifficulty').value,
                 thumbnailUrl: document.getElementById('levelThumb').value,
                 videoUrl: document.getElementById('levelVideo').value,
                 videoType: document.getElementById('levelVideoType').value,
@@ -286,8 +380,8 @@
             try {
                 const q = query(collection(db, "levels"), orderBy("rank", "asc"));
                 const querySnapshot = await getDocs(q);
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
                     const opt = document.createElement("option");
                     opt.value = data.levelId;
                     opt.textContent = `#${data.rank} - ${data.name}`;
@@ -298,14 +392,133 @@
             }
         }
 
-        loadLevelDropdown();
+        // --- FETCH AND RENDER MANAGE LIST ---
+        async function loadManageList() {
+            const container = document.getElementById("manage-level-list");
+            container.innerHTML = "<p style='color:#a5a5a5;'>Loading levels...</p>";
+            try {
+                const q = query(collection(db, "levels"), orderBy("rank", "asc"));
+                const querySnapshot = await getDocs(q);
+                loadedLevels = [];
+                querySnapshot.forEach((docSnap) => {
+                    loadedLevels.push({ docId: docSnap.id, ...docSnap.data() });
+                });
+                renderManageList();
+            } catch (e) {
+                console.error("Error loading management list: ", e);
+                container.innerHTML = "<p style='color:#ff4757;'>Failed to load levels.</p>";
+            }
+        }
 
-        // Switch tab helpers
+        function renderManageList() {
+            const container = document.getElementById("manage-level-list");
+            if (loadedLevels.length === 0) {
+                container.innerHTML = "<p style='color:#a5a5a5;'>No levels found.</p>";
+                return;
+            }
+
+            container.innerHTML = "";
+            loadedLevels.forEach((lvl, index) => {
+                const item = document.createElement("div");
+                item.className = "manage-item";
+                item.dataset.docId = lvl.docId;
+
+                item.innerHTML = `
+                    <div class="action-btns">
+                        <button type="button" class="btn-icon" onclick="moveLevel(${index}, -1)">▲</button>
+                        <button type="button" class="btn-icon" onclick="moveLevel(${index}, 1)">▼</button>
+                    </div>
+                    <div class="level-info">
+                        <span class="level-title">#${index + 1} - ${lvl.name}</span>
+                    </div>
+                    <select class="diff-select">
+                        <option value="Easy Demon" ${lvl.difficulty === "Easy Demon" ? "selected" : ""}>Easy Demon</option>
+                        <option value="Medium Demon" ${lvl.difficulty === "Medium Demon" ? "selected" : ""}>Medium Demon</option>
+                        <option value="Hard Demon" ${lvl.difficulty === "Hard Demon" ? "selected" : ""}>Hard Demon</option>
+                        <option value="Insane Demon" ${lvl.difficulty === "Insane Demon" ? "selected" : ""}>Insane Demon</option>
+                        <option value="Extreme Demon" ${lvl.difficulty === "Extreme Demon" ? "selected" : ""}>Extreme Demon</option>
+                    </select>
+                    <button type="button" class="btn-icon btn-danger" onclick="deleteLevel('${lvl.docId}')">✕</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Move level up/down in array
+        window.moveLevel = function(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= loadedLevels.length) return;
+
+            // Save current difficulty selection before array manipulation
+            const selects = document.querySelectorAll(".diff-select");
+            selects.forEach((sel, i) => {
+                loadedLevels[i].difficulty = sel.value;
+            });
+
+            const temp = loadedLevels[index];
+            loadedLevels[index] = loadedLevels[newIndex];
+            loadedLevels[newIndex] = temp;
+
+            renderManageList();
+        };
+
+        // Delete level document
+        window.deleteLevel = async function(docId) {
+            if (!confirm("Are you sure you want to delete this level?")) return;
+            try {
+                await deleteDoc(doc(db, "levels", docId));
+                showToast("Level deleted!");
+                loadManageList();
+                loadLevelDropdown();
+            } catch (e) {
+                console.error("Error deleting level:", e);
+                alert("Delete failed: " + e.message);
+            }
+        };
+
+        // --- BATCH SAVE RANKS AND DIFFICULTIES ---
+        document.getElementById("save-order-btn").addEventListener("click", async () => {
+            const items = document.querySelectorAll(".manage-item");
+            if (items.length === 0) return;
+
+            const batch = writeBatch(db);
+
+            items.forEach((item, index) => {
+                const docId = item.dataset.docId;
+                const newRank = index + 1;
+                const newDiff = item.querySelector(".diff-select").value;
+
+                const docRef = doc(db, "levels", docId);
+                batch.update(docRef, {
+                    rank: newRank,
+                    difficulty: newDiff
+                });
+            });
+
+            try {
+                await batch.commit();
+                showToast("Hierarchy & difficulties updated!");
+                loadLevelDropdown();
+                loadManageList();
+            } catch (e) {
+                console.error("Batch update failed:", e);
+                alert("Save failed: " + e.message);
+            }
+        });
+
+        // Tab switching logic
         window.switchTab = function(formId) {
             document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(formId).classList.add('active');
-            event.target.classList.add('active');
+            
+            // Highlight current active tab button
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(formId));
+            if (activeBtn) activeBtn.classList.add('active');
+
+            if (formId === 'manage-form') {
+                loadManageList();
+            }
         };
 
         function showToast(msg) {
@@ -314,6 +527,8 @@
             toast.style.display = "block";
             setTimeout(() => { toast.style.display = "none"; }, 3000);
         }
+
+        loadLevelDropdown();
     </script>
 </body>
 </html>
